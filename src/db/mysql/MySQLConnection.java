@@ -10,15 +10,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import db.DBConnection;
-import db.DBConnectionFactory;
 import entity.Place;
 import entity.Place.PlaceBuilder;
 import external.GoogleMapsSearchPlaceAPI;
-import rpc.RpcHelper;
 
 public class MySQLConnection implements DBConnection {
 
@@ -335,7 +330,7 @@ public class MySQLConnection implements DBConnection {
 	}
 
 	@Override
-	public String getFullname(String userId) {
+	public String getUsername(String userId) {
 		// TODO Auto-generated method stub
 		if (conn == null) {
 			return null;
@@ -376,42 +371,51 @@ public class MySQLConnection implements DBConnection {
 		}	
 		return false;
 	}
-	
+
 	@Override
-	public boolean addUser(String userId, String username, String password) {
+	public void addUser(String userId, String password, String userName) {
+		// TODO Auto-generated method stub
 		if (conn == null) {
-			return false;
+			System.err.println("DB connection failed");
+			return;
 		}
+
 		try {
 			String sql = "INSERT IGNORE INTO users VALUES (?, ?, ?)";
-			PreparedStatement statement = conn.prepareStatement(sql);
-			statement.setString(1, userId);
-			statement.setString(2, username);
-			statement.setString(3, password);
-			statement.execute();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, userId);
+			ps.setString(2, password);
+			ps.setString(3, userName);
+			ps.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}	
-		return true;
+		
 	}
-	
+
 	@Override
 	public boolean verifyUserId(String userId) {
+		// TODO Auto-generated method stub
 		if (conn == null) {
-			return false;
+			return true;
 		}
 		try {
-			String sql = "SELECT user_id FROM users WHERE user_id = ?";
+			String sql = "SELECT * FROM users WHERE user_id = ? ";
 			PreparedStatement statement = conn.prepareStatement(sql);
 			statement.setString(1, userId);
 			ResultSet rs = statement.executeQuery();
-			if (!rs.next()) { // if user doesn't exist, return true
-				return true;
-			} 
-		} catch (SQLException e) {
+			if (rs.next()) {
+				String password =rs.getString("password");
+				System.out.println(password);
+				if(password.length()>0)
+				{
+					return false;
+				}
+			}
+		}catch (SQLException e) {
 			e.printStackTrace();
-		}
-		return false;	
+		}	
+		return true;
 	}
 
 }
